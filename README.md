@@ -140,3 +140,127 @@ Other techniques could be used to achieve Tail Call Optimization benefits:
 1. Continuation passing style
     
 2. Trampolines
+    
+
+# Continuation Passing Style
+
+Continuation passing style (CPS) is a programming paradigm where functions take an extra argument representing the continuation - the rest of the computation left to be done.
+
+Instead of returning a value as the result, functions pass the computed value to the continuation. The continuation then uses that value to continue the computation.
+
+How it works:
+
+* Functions take an extra argument - the continuation - which is a callback function.
+    
+* Instead of returning a value, functions pass the computed value to the continuation.
+    
+* The continuation then uses that value and continues the computation by calling itself recursively.
+    
+
+An example:
+
+Without CPS:
+
+```javascript
+function fact(n) {
+  if (n === 1) return 1;
+  return n * fact(n-1);
+}
+```
+
+With CPS:
+
+```javascript
+function fact(n, cont) {
+  if (n === 1) cont(1); 
+  else fact(n-1, function(result) {
+    cont(n * result);
+  });
+}
+
+fact(3, function(result) {
+  console.log(result); // 6
+});
+```
+
+Here we pass a continuation - the anonymous function - which uses the result of the fact computation.
+
+This has some benefits for optimizing recursion:
+
+* It avoids growing the call stack - since functions pass the continuation and don't actually return. This means infinite recursion is possible.
+    
+* It enables tail call optimization - since functions are not actually returning, all calls are considered tail calls.
+    
+
+# Trampolines
+
+Trampolines are a technique to execute recursive functions without growing the call stack.
+
+They work by simulating the continuation-passing style (CPS) within an imperative programming model.
+
+The basic idea is:
+
+1. We wrap the original recursive function.
+    
+2. Instead of calling itself recursively, the function returns a thunk - a function representing the rest of the computation.
+    
+3. The trampoline - a loop - then executes these thunks one by one.
+    
+
+This has the effect of "bouncing" between thunks, like a trampoline, instead of growing the call stack through recursion.
+
+How it works:
+
+* We wrap the recursive function to return a thunk instead of calling itself recursively
+    
+* We define a trampoline loop that:
+    
+    * Executes the first thunk
+        
+    * If the result is a thunk, it executes that thunk
+        
+    * Continue executing thunks until a final result is returned
+        
+* This simulates CPS within an imperative programming model
+    
+* The call stack does not grow - the trampoline loop "bounces" between thunks
+    
+
+```javascript
+function fact(n) {
+   if (n === 1) return () => 1;
+  
+   return () => fact(n - 1).then(result => n * result);
+}
+
+function trampoline() {
+  let thunk = fact(3);
+  
+  while (typeof thunk === 'function') {
+    thunk = thunk();       
+  }
+
+  return thunk;
+}
+
+let result = trampoline(); // 6
+```
+
+Here, `fact()` returns thunks instead of calling itself recursively. The trampoline loop executes these thunks one by one until a final result is returned.
+
+In summary, trampolines are a technique that:
+
+* Simulate continuation-passing style
+    
+* Execute recursive functions without growing the call stack
+    
+* Work by "bouncing" between thunks, like a trampoline
+    
+
+# Wrapping Up
+
+In conclusion, optimizing recursion with the proper tail call, tail call optimization, continuation passing style, and trampoline techniques improves the performance and efficiency of recursive functions. These approaches enable us to overcome limitations, achieve constant time complexity, and build more robust applications. By understanding and applying these optimization techniques, we can write efficient recursive code and handle complex computations effectively.
+
+## Connect with Me
+
+[**Twitter**](https://twitter.com/risesumit) [**Github**](https://github.com/SumitKcs) [**Linkedin**](https://www.linkedin.com/in/sumitssr/)
